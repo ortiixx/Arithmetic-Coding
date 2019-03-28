@@ -22,8 +22,16 @@ T: suma total de frecuencias
 
 
 def IntegerArithmeticCode(mensaje,alfabeto,frecuencias):
-    u = 2**math.ceil(math.log(4*sum(frecuencias))/math.log(2))
-    return u
+    m = int(math.ceil(math.log(4*sum(frecuencias))/math.log(2)))
+    l = ['0']*m
+    u = ['1']*m
+    mid = ['1']+['0']*(m-1)
+    cum_count = [0]*(len(frecuencias)+1)
+    sumatory = 0
+    for i in range(len(frecuencias)):
+        sumatory += frecuencias[i]
+        cum_count[i+1] = [sumatory]
+    return cum_count, frecuencias
     
     
 #%%
