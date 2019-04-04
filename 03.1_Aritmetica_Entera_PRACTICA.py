@@ -23,15 +23,49 @@ T: suma total de frecuencias
 
 def IntegerArithmeticCode(mensaje,alfabeto,frecuencias):
     m = int(math.ceil(math.log(4*sum(frecuencias))/math.log(2)))
-    l = ['0']*m
-    u = ['1']*m
-    mid = ['1']+['0']*(m-1)
-    cum_count = [0]*(len(frecuencias)+1)
-    sumatory = 0
-    for i in range(len(frecuencias)):
-        sumatory += frecuencias[i]
-        cum_count[i+1] = [sumatory]
-    return cum_count, frecuencias
+    l = 0
+    u = 2**m
+    cum_count = [0]*(len(alfabeto)+1)
+    count = 0
+    scale = 0
+    for i in range(len(alfabeto)):
+        count += frecuencias[i]
+        cum_count[i+1] = count
+
+    bound = lambda x: l+math.floor(((u-l+1) * x) / count)
+    #we put here the masks
+    b = 2**m #this mask is for checking if the MSB of two words equals
+    b2 = 2**(m-1) #this mask for checking the second one
+    transmission = ""
+    for c in mensaje:
+        i = alfabeto.index(c)
+        uax = bound(cum_count[i-1])
+        l = bound(cum_count[i]) - 1
+        u = uax
+        c1 = (u & b) == (l & b)
+        c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
+        while(c1 | c2):
+            if(c1):
+                tbit = ''
+                u = (u << 1) | 1
+                l = l << 1
+                if(u & b == 0):
+                    tbit = '0'
+                else:
+                    tbit = '1'
+                transmission += tbit
+                while(scale > 0):
+                    scale -= 1
+                    transmission += '1' if (tbit == '0') else  '0' #we send complementary
+            if(not c1 and c2):
+                scale += 1
+                u = b2^(u<<1|1)
+                l = b2^(l<<1)
+            #here we update the conditions
+            c1 = (u & b) == (l & b)
+            c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
+
+    return transmission
     
     
 #%%
@@ -81,7 +115,7 @@ frecuencias=[1,10,20,300]
 mensaje='dddcabccacabadac'
 tamanyo_mensaje=len(mensaje)  
 
-print(IntegerArithmeticCode("", [], frecuencias))
+print(IntegerArithmeticCode(mensaje, alfabeto, frecuencias))
 
 
 #for C in lista_C:
