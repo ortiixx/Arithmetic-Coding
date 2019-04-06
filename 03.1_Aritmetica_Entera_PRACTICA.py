@@ -32,11 +32,11 @@ def IntegerArithmeticCode(mensaje,alfabeto,frecuencias):
         count += frecuencias[i]
         cum_count[i+1] = count
 
-    bound = lambda x: l+math.floor(((u-l+1) * x) / count)
+    bound = lambda x: l+math.floor(((u-l+1) * x) / count) #function to perform the calculus of the boundaries
     #we put here the masks
     b = 2**m #this mask is for checking if the MSB of two words equals
-    b2 = 2**(m-1) #this mask for checking the second one
-    transmission = ""
+    b2 = 2**(m-1) #and this for checking the second one
+    transmission = "" #string containing the coded message
     for c in mensaje:
         i = alfabeto.index(c)
         uax = bound(cum_count[i-1])
@@ -64,7 +64,7 @@ def IntegerArithmeticCode(mensaje,alfabeto,frecuencias):
             #here we update the conditions
             c1 = (u & b) == (l & b)
             c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
-
+    print(scale)
     return transmission
     
     
@@ -77,8 +77,25 @@ longitud del mensaje y el alfabeto con sus frecuencias
 dar el mensaje original
 """
            
-#def IntegerArithmeticDecode(codigo,tamanyo_mensaje,alfabeto,frecuencias):
-
+def IntegerArithmeticDecode(codigo,tamanyo_mensaje,alfabeto,frecuencias):
+    m = int(math.ceil(math.log(4*sum(frecuencias))/math.log(2)))
+    l = 0
+    u = 2**m
+    cum_count = [0]*(len(alfabeto)+1)
+    count = 0
+    scale = 0
+    tag = codigo[0:m]
+    check = lambda x: math.floor((count-1)*(tag-l+1)/(u-l+1))
+    bound = lambda x: l+math.floor(((u-l+1) * x) / count) #function to perform the calculus of the boundaries
+    for i in range(len(alfabeto)):
+        count += frecuencias[i]
+        cum_count[i+1] = count
+    while()
+    i = 0
+    while(check(t) >= cum_count[i]):
+        ++i
+        
+    
     
 
 
@@ -112,7 +129,7 @@ lista_C=['0100011101100000000010000001111110000001000100000000000011000000100011
          '01000111011000000000100000011111100000010001000000000000110000001000111100110000100000000']
 alfabeto=['a','b','c','d']
 frecuencias=[1,10,20,300]
-mensaje='dddcabccacabadac'
+mensaje='a'
 tamanyo_mensaje=len(mensaje)  
 
 print(IntegerArithmeticCode(mensaje, alfabeto, frecuencias))
