@@ -79,55 +79,58 @@ longitud del mensaje y el alfabeto con sus frecuencias
 dar el mensaje original
 """
            
-def IntegerArithmeticDecode(codigo,tamanyo_mensaje,alfabeto,frecuencias):
+def IntegerArithmeticDecode(codigo, tamanyo_mensaje, alfabeto, frecuencias):
     m = int(math.ceil(math.log(4*sum(frecuencias))/math.log(2)))
     l = 0
-    u = 2**m
+    u = (2**m)-1
     cum_count = [0]*(len(alfabeto)+1)
     count = 0
-    scale = 0
-    tag = int(codigo[0:m], 2)
-    print(tag)
     message = ""
-    check = lambda x: math.floor((count-1)*(x-l+1)/(u-l+1))
-    bound = lambda x: l+math.floor(((u-l+1) * x) / count) #function to perform the calculus of the boundaries
-
     #we put here the masks
-    b = 2**m #this mask is for checking if the MSB of two words equals
-    b2 = 2**(m-1) #and this for checking the second one
+    b = 2**(m-1) #this mask is for checking if the MSB of two words equals
+    b2 = 2**(m-2) #and this for checking the second one
+    b3 = (2**m)-1  #to control max size
+    print(b)
     tagoffset = 0
+    tag = int(codigo[0:m], 2)
     for i in range(len(alfabeto)):
         count += frecuencias[i]
         cum_count[i+1] = count
-    while(len(message) < tamanyo_mensaje):
-        tag = int(codigo[tagoffset:tagoffset+m], 2)
+    while len(message) < tamanyo_mensaje:
+        val = math.floor(((tag -l + 1)*count-1) / (u -l + 1))
         i = 0
-        val = check(tag)
-        print(tag)
-        while(val >= cum_count[i]):
-           i += 1
+        while val >= cum_count[i]:
+            i += 1
         i -= 1
         message += alfabeto[i]
-        print(message)
-        i = alfabeto.index(alfabeto[i])
-        uax = bound(cum_count[i-1])
-        l = bound(cum_count[i]) - 1
-        u = uax
+        lax = l + math.floor(((u -l + 1) * cum_count[i-1]) / count)
+        u = l + math.floor(((u -l + 1) * cum_count[i]) / count) -1
+        l = lax
         c1 = (u & b) == (l & b)
-        c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
-        while(c1 | c2):
-            if(c1):
+        c2 = ((u & b2) != (l & b2)) and ((l & b2) != 0)
+        while c1 | c2:
+            if c1:
+                print("C1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print(bin(u))
                 tagoffset += 1
-                u = (u << 1) | 1
-                l = l << 1
-            if(not c1 and c2):
-                tagoffset += 1
-                codigo[tagoffset] = '0' if codigo[tagoffset] == '1' else '0'
-                u = b2^(u<<1|1)
-                l = b2^(l<<1)
+                tag = int(codigo[tagoffset : tagoffset+m], 2)
+                u = ((u << 1)|1) & b3
+                l = (l << 1) & b3
+                print(bin(u))
+            else:
+                if c2:
+                    print("C2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    print(bin(tag))
+                    tagoffset += 1
+                    tag = int(codigo[tagoffset : tagoffset+m], 2)
+                    u = b^((u<<1) & b3)|1
+                    l = b^(l<<1) & b3
+                    tag = b^tag
+                    print(bin(tag))
             #here we update the conditions
             c1 = (u & b) == (l & b)
-            c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
+            c2 = ((u & b2) != (l & b2)) and ((l & b2) != 0)
+
     return message
 
 #%%
@@ -162,7 +165,7 @@ mensaje='dddcabccacabadac'
 tamanyo_mensaje=len(mensaje)  
 code = IntegerArithmeticCode(mensaje, alfabeto, frecuencias)
 print(code)
-print(IntegerArithmeticDecode(lista_C[1], tamanyo_mensaje, alfabeto, frecuencias))
+print(IntegerArithmeticDecode(lista_C[0], tamanyo_mensaje, alfabeto, frecuencias))
 
 
 #for C in lista_C:
