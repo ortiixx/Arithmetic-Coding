@@ -24,48 +24,50 @@ T: suma total de frecuencias
 def IntegerArithmeticCode(mensaje,alfabeto,frecuencias):
     m = int(math.ceil(math.log(4*sum(frecuencias))/math.log(2)))
     l = 0
-    u = 2**m
+    u = 2**m-1
     cum_count = [0]*(len(alfabeto)+1)
     count = 0
     scale = 0
     for i in range(len(alfabeto)):
         count += frecuencias[i]
         cum_count[i+1] = count
-
-    bound = lambda x: l+math.floor(((u-l+1) * x) / count) #function to perform the calculus of the boundaries
     #we put here the masks
-    b = 2**m #this mask is for checking if the MSB of two words equals
-    b2 = 2**(m-1) #and this for checking the second one
+    b = 2**(m-1) #this mask is for checking if the MSB of two words equals
+    b2 = 2**(m-2) #and this for checking the second one
+    b3 = 2**m-1
     transmission = "" #string containing the coded message
 
     for c in mensaje:
         i = alfabeto.index(c)
-        uax = bound(cum_count[i-1])
-        l = bound(cum_count[i]) - 1
+        uax = l+math.floor(((u-l+1)*cum_count[i+1])/count)-1
+        l = l+math.floor(((u-l+1)*cum_count[i])/count)
         u = uax
         c1 = (u & b) == (l & b)
-        c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
-
+        c2 = ((u & b2) != (l & b2)) and ((l & b2) == b2)
+        print("U: ", u)
+        print("L: ", l)
         while(c1 | c2):
             if(c1):
                 tbit = ''
-                u = (u << 1) | 1
-                l = l << 1
                 if(u & b == 0):
                     tbit = '0'
                 else:
                     tbit = '1'
+                u = ((u << 1) | 1) & b3
+                l = (l << 1) & b3
                 transmission += tbit
                 while(scale > 0):
                     scale -= 1
-                    transmission += '1' if (tbit == '0') else  '0' #we send complementary
-            if(not c1 and c2):
+                    transmission += '1' if (tbit == '0') else '0' #we send complementary
+            c1 = (u & b) == (l & b)
+            c2 = ((u & b2) != (l & b2)) and ((l & b2) == b2)
+            if not c1 and c2:
                 scale += 1
-                u = b2^(u<<1|1)
-                l = b2^(l<<1)
+                u = b^(u<<1|1) & b3
+                l = b^(l<<1) & b3
             #here we update the conditions
             c1 = (u & b) == (l & b)
-            c2 = ((u & b2) != (l & b2)) and ((l & b2) == 1)
+            c2 = ((u & b2) != (l & b2)) and ((l & b2) == b2)
 
     return transmission
     
@@ -90,7 +92,6 @@ def IntegerArithmeticDecode(codigo, tamanyo_mensaje, alfabeto, frecuencias):
     b = 2**(m-1) #this mask is for checking if the MSB of two words equals
     b2 = 2**(m-2) #and this for checking the second one
     b3 = (2**m)-1  #to control max size
-    print(b)
     tagoffset = 0
     tag = int(codigo[0:m], 2)
     for i in range(len(alfabeto)):
@@ -101,36 +102,28 @@ def IntegerArithmeticDecode(codigo, tamanyo_mensaje, alfabeto, frecuencias):
         i = 0
         while val >= cum_count[i]:
             i += 1
-        i -= 1
-        message += alfabeto[i]
+        message += alfabeto[i-1]
         lax = l + math.floor(((u -l + 1) * cum_count[i-1]) / count)
         u = l + math.floor(((u -l + 1) * cum_count[i]) / count) -1
         l = lax
         c1 = (u & b) == (l & b)
-        c2 = ((u & b2) != (l & b2)) and ((l & b2) != 0)
+        c2 = ((u & b2) != (l & b2)) and ((l & b2) == b2)
         while c1 | c2:
             if c1:
-                print("C1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print(bin(u))
                 tagoffset += 1
                 tag = int(codigo[tagoffset : tagoffset+m], 2)
                 u = ((u << 1)|1) & b3
                 l = (l << 1) & b3
-                print(bin(u))
             else:
                 if c2:
-                    print("C2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                    print(bin(tag))
                     tagoffset += 1
                     tag = int(codigo[tagoffset : tagoffset+m], 2)
                     u = b^((u<<1) & b3)|1
                     l = b^(l<<1) & b3
                     tag = b^tag
-                    print(bin(tag))
             #here we update the conditions
             c1 = (u & b) == (l & b)
-            c2 = ((u & b2) != (l & b2)) and ((l & b2) != 0)
-
+            c2 = ((u & b2) != (l & b2)) and ((l & b2) == b2)
     return message
 
 #%%
@@ -165,7 +158,8 @@ mensaje='dddcabccacabadac'
 tamanyo_mensaje=len(mensaje)  
 code = IntegerArithmeticCode(mensaje, alfabeto, frecuencias)
 print(code)
-print(IntegerArithmeticDecode(lista_C[0], tamanyo_mensaje, alfabeto, frecuencias))
+print(lista_C[0])
+print(IntegerArithmeticDecode(code, tamanyo_mensaje, alfabeto, frecuencias))
 
 
 #for C in lista_C:
